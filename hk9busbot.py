@@ -86,8 +86,22 @@ def button(bot, update):
 			station = data["data"]["routeStops"][int(seq)]["CName"]
 
 			#get the time
-			link = "http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx/?action=geteta&lang=1&route=%s&bound=%s&servicetype=1&bsiCode=%s&seq=%s"%(route,bound,bsiCode,seq)
-			r = requests.get(link)
+			servicetype="1"
+			link = "http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx/?action=get_ETA&lang=1"
+
+			#--312017-05-05 00:27:57.00.13--
+			#--312017-05-05 08:33:38.00.13--
+			myT = time.strftime("%Y-%m-%d")
+			myT2 = datetime.now().strftime('%H:%M:%S')+".00."
+			t = "%s %s"%(myT,myT2)
+			sep = "--31%s13--"%t
+			#print(sep)
+			token = route+sep+bound+sep+servicetype+sep+bsiCode.replace("-","")+sep+seq+sep+str(int(round(time.time() * 1000)))[:-2] +"00"
+			import base64
+			token = "EA"+base64.b64encode(token.encode('utf-8')).decode('utf-8').strip()
+			#print(token)
+			#http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx/?action=get_ETA&lang=1
+			r = requests.post(link,data={"token":token,"t":t})
 			data = json.loads(r.text)
 			text = "巴士%s【%s】\n%s==>%s\n"%(route,station,OriCName,DestCName)
 			last_update = datetime.fromtimestamp(int(data["data"]["updated"])/1000).strftime('%H:%M:%S')
